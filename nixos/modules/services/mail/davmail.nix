@@ -27,6 +27,12 @@ in
     options.services.davmail = {
       enable = mkEnableOption "davmail, an MS Exchange gateway";
 
+      url = mkOption {
+        type = types.str;
+        description = "Outlook Web Access URL to access the exchange server, i.e. the base webmail URL.";
+        example = "https://outlook.office365.com/EWS/Exchange.asmx";
+      };
+
       config = mkOption {
         type = configType;
         default = {};
@@ -42,7 +48,6 @@ in
             davmail.imapPort = 55555;
             davmail.bindAddress = "10.0.1.2";
             davmail.smtpSaveInSent = true;
-            davmail.url = "https://outlook.office365.com/EWS/Exchange.asmx";
             davmail.folderSizeLimit = 10;
             davmail.caldavAutoSchedule = false;
             log4j.logger.rootLogger = "DEBUG";
@@ -56,20 +61,16 @@ in
       services.davmail.config.davmail = mapAttrs (name: mkDefault) {
         server = true;
         disableUpdateCheck = true;
-        logFilePath = "/var/lib/davmail/davmail.log";
+        logFilePath = "/var/log/davmail/davmail.log";
         logFileSize = "1MB";
-        mode = "EWS";
+        mode = "auto";
+        url = cfg.url;
         caldavPort = 1080;
         imapPort = 1143;
         ldapPort = 1389;
         popPort = 1110;
         smtpPort = 1025;
       };
-
-      assertions = [{
-        assertion = cfg.config ? davmail.url;
-        message = "You need to set `services.davmail.config.davmail.url` in order to use davmail";
-      }];
 
       systemd.services.davmail = {
         description = "DavMail POP/IMAP/SMTP Exchange Gateway";
